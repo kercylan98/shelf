@@ -27,7 +27,7 @@ type Shelf interface {
 	Bind(shelf ...Shelf) Shelf
 	// 绑定架子到该架子末尾，并返回子架子
 	BindC(shelf Shelf) Shelf
-	// 删除特定节点
+	// 删除特定架子
 	Del(shelf Shelf)
 
 	// 设置壳子
@@ -35,7 +35,7 @@ type Shelf interface {
 	// 设置所在的组
 	SetGroup(group *Group)
 
-	// 渲染该节点
+	// 渲染该架子
 	Render(level int) string
 }
 
@@ -173,10 +173,10 @@ func (slf *VirtualShelf) Del(shelf Shelf) {
 		if len(slf._children) == 1 {
 			slf._children = []Shelf{}
 		} else {
-			for _, s := range slf._children[index+1:] {
-				slf._mapper[s.GetID()] = slf._mapper[s.GetID()] - 1
-			}
 			slf._children = append(slf._children[:index], slf._children[index+1:]...)
+			for i, s := range slf._children {
+				slf._mapper[s.GetID()] = i
+			}
 		}
 		shelf.SetParent(nil)
 	}

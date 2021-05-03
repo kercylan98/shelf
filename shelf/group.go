@@ -21,6 +21,39 @@ func (slf *Group) init() {
 	})
 }
 
+// 设置该组内特定架子的位置
+func (slf *Group) Move(shelf Shelf, index int) {
+	if len(slf.shelves) <= 1 {
+		return
+	}
+	if index < 0 {
+		index = 0
+	}
+	if index > len(slf.shelves)-1 {
+		index = len(slf.shelves) - 1
+	}
+	if i, exist := slf.mapper[shelf.GetID()]; exist {
+		slf.shelves = append(slf.shelves[:i], slf.shelves[i+1:]...)
+	} else {
+		return
+	}
+
+	switch index {
+	case 0:
+		slf.shelves = append([]Shelf{shelf}, slf.shelves...)
+	case 1:
+		slf.shelves = append(append([]Shelf{slf.shelves[0]}, shelf), slf.shelves[1:]...)
+	default:
+		left := slf.shelves[:index]
+		right := slf.shelves[index:]
+		slf.shelves = append(append(left, shelf), right...)
+	}
+
+	for i, s := range slf.shelves {
+		slf.mapper[s.GetID()] = i
+	}
+}
+
 // 从该组内删除某架子
 func (slf *Group) Del(shelf Shelf) {
 	slf.init()
@@ -29,10 +62,10 @@ func (slf *Group) Del(shelf Shelf) {
 		if len(slf.shelves) == 1 {
 			slf.shelves = []Shelf{}
 		} else {
-			for _, s := range slf.shelves[index+1:] {
-				slf.mapper[s.GetID()] = slf.mapper[s.GetID()] - 1
-			}
 			slf.shelves = append(slf.shelves[:index], slf.shelves[index+1:]...)
+			for i, s := range slf.shelves {
+				slf.mapper[s.GetID()] = i
+			}
 		}
 		if shelf.GetGroup() != nil {
 			shelf.SetGroup(nil)
