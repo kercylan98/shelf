@@ -86,3 +86,49 @@ func TestShelf_Bind_Re_Bind_Self(t *testing.T) {
 	shelf2.Bind(shelf1)
 	fmt.Println(shelf2.Render(0))
 }
+
+// 测试只有一个架子时移动架子
+func TestShelf_Move_One(t *testing.T) {
+	root := shelves.NewPackage("pkg")
+	item1 := shelves.NewPackage("child1")
+
+	root.Bind(item1)
+
+	fmt.Println(root.Render(0))
+	root.Move(item1, 0)
+	fmt.Println(root.Render(0))
+}
+
+// 测试有两个架子时移动架子
+func TestShelf_Move_Two(t *testing.T) {
+	root := shelves.NewPackage("pkg")
+	item1 := shelves.NewPackage("child1")
+	item2 := shelves.NewPackage("child2")
+
+	root.Bind(item1, item2)
+
+	fmt.Println(root.Render(0))
+	root.Move(item1, 1)
+	fmt.Println(root.Render(0))
+}
+
+// 测试有三个架子时移动架子
+func TestShelf_Move_Three(t *testing.T) {
+	root := shelves.NewPackage("pkg")
+	item1 := shelves.NewPackage("child1")
+	item2 := shelves.NewPackage("child2")
+	item3 := shelves.NewPackage("child3")
+
+	root.Bind(item1, item2, item3)
+
+	fmt.Println(root.Render(0))
+	root.Move(item1, 0)
+	fmt.Println(root.Render(0))
+	root.Move(item1, 1)
+	fmt.Println(root.Render(0))
+	root.Move(item1, 2)
+	fmt.Println(root.Render(0))
+	root.Move(item1, 0)
+	fmt.Println(root.Render(0))
+
+}

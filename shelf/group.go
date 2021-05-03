@@ -1,6 +1,7 @@
 package shelf
 
 import (
+	"errors"
 	uuid "github.com/satori/go.uuid"
 	"sync"
 )
@@ -22,9 +23,9 @@ func (slf *Group) init() {
 }
 
 // 设置该组内特定架子的位置
-func (slf *Group) Move(shelf Shelf, index int) {
+func (slf *Group) Move(shelf Shelf, index int) error {
 	if len(slf.shelves) <= 1 {
-		return
+		return nil
 	}
 	if index < 0 {
 		index = 0
@@ -35,7 +36,7 @@ func (slf *Group) Move(shelf Shelf, index int) {
 	if i, exist := slf.mapper[shelf.GetID()]; exist {
 		slf.shelves = append(slf.shelves[:i], slf.shelves[i+1:]...)
 	} else {
-		return
+		return errors.New("the group does not contain the child shelf")
 	}
 
 	switch index {
@@ -52,6 +53,7 @@ func (slf *Group) Move(shelf Shelf, index int) {
 	for i, s := range slf.shelves {
 		slf.mapper[s.GetID()] = i
 	}
+	return nil
 }
 
 // 从该组内删除某架子

@@ -1,6 +1,7 @@
 package shelf
 
 import (
+	"errors"
 	uuid "github.com/satori/go.uuid"
 	"sync"
 )
@@ -29,6 +30,8 @@ type Shelf interface {
 	BindC(shelf Shelf) Shelf
 	// 删除特定架子
 	Del(shelf Shelf)
+	// 移动子架子位置
+	Move(shelf Shelf, index int) error
 
 	// 设置壳子
 	SetParent(shelf Shelf)
@@ -47,6 +50,39 @@ type VirtualShelf struct {
 	_mapper   map[string]int // 架子里的架子的映射
 	_write    func() string  // 输出函数
 	_group    *Group         // 架子所在的组
+}
+
+func (slf *VirtualShelf) Move(shelf Shelf, index int) error {
+	if len(slf._children) <= 1 {
+		return nil
+	}
+	if index < 0 {
+		index = 0
+	}
+	if index > len(slf._children)-1 {
+		index = len(slf._children) - 1
+	}
+	if i, exist := slf._mapper[shelf.GetID()]; exist {
+		slf._children = append(slf._children[:i], slf._children[i+1:]...)
+	} else {
+		return errors.New("the shelf does not contain the child shelf")
+	}
+
+	switch index {
+	case 0:
+		slf._children = append([]Shelf{shelf}, slf._children...)
+	case 1:
+		slf._children = append(append([]Shelf{slf._children[0]}, shelf), slf._children[1:]...)
+	default:
+		left := slf._children[:index]
+		right := slf._children[index:]
+		slf._children = append(append(left, shelf), right...)
+	}
+
+	for i, s := range slf._children {
+		slf._mapper[s.GetID()] = i
+	}
+	return nil
 }
 
 func (slf *VirtualShelf) Contains(shelf Shelf) (Shelf, bool) {
