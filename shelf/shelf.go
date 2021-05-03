@@ -10,40 +10,84 @@ type Shelf interface {
 	GetID() string
 	// 获取虚拟架子
 	GetVirtual() *VirtualShelf
-	// 是否是根节点
-	IsRoot() bool
-	// 获取父节点
+	// 获取壳子
 	GetParent() Shelf
-	// 获取所有子节点
+	// 获取所在的组
+	GetGroup() *Group
+	// 获取所有子架子
 	GetAllChildren() []Shelf
-	// 移动该节点到特定节点下
-	Move(parent Shelf)
-	// 添加节点到该节点末尾，并返回支持继续添加到相同父节点的节点
-	Add(shelf Shelf) Shelf
-	// 添加节点到该节点末尾，并返回子节点
-	AddC(shelf Shelf) Shelf
-	// 删除特定节点
-	Del(shelf Shelf)
-	// 设置架子层级
-	SetLevel(level int)
-	// 设置壳子
-	SetParent(shelf Shelf)
-	// 渲染该节点
-	Render() string
+	// 是否是根架子
+	IsRoot() bool
 	// 设置输出内容
 	SetWrite(func() string) Shelf
+	// 检查子架子是否存在某架子并返回其壳子
+	Contains(shelf Shelf) (Shelf, bool)
+
+	// 绑定某架子到该架子到末尾，并返回支持继续添加到相同架子的架子
+	Bind(shelf ...Shelf) Shelf
+	// 绑定架子到该架子末尾，并返回子架子
+	BindC(shelf Shelf) Shelf
+	// 删除特定节点
+	Del(shelf Shelf)
+
+	// 设置壳子
+	SetParent(shelf Shelf)
+	// 设置所在的组
+	SetGroup(group *Group)
+
+	// 渲染该节点
+	Render(level int) string
 }
 
 type VirtualShelf struct {
-	_init	  sync.Once		 // 初始化锁
+	_init     sync.Once      // 初始化锁
 	_id       string         // 架子的id
 	_parent   Shelf          // 架子的壳子
 	_children []Shelf        // 架子里的架子
 	_mapper   map[string]int // 架子里的架子的映射
-	_level    int            // 架子的层级
-	_write 	  func() string  // 输出函数
+	_write    func() string  // 输出函数
+	_group    *Group         // 架子所在的组
 }
 
+func (slf *VirtualShelf) Contains(shelf Shelf) (Shelf, bool) {
+	if _, exist := slf._mapper[shelf.GetID()]; exist {
+		return slf, true
+	}
+	for _, child := range slf._children {
+		if parent, exist := child.Contains(shelf); exist {
+			return parent, true
+		}
+	}
+	return nil, false
+}
+
+func (slf *VirtualShelf) SetGroup(group *Group) {
+	if group == nil {
+		if slf._group != nil {
+			slf._group.Del(slf)
+		}
+		slf._group = group
+		return
+	}
+
+	if _, exist := group.mapper[slf._id]; exist {
+		slf._group = group
+		return
+	}
+
+	if slf._parent != nil {
+		slf._parent.Del(slf)
+	}
+	if slf._group != nil {
+		slf._group.Del(slf)
+	}
+
+	group.Bind(slf)
+}
+
+func (slf *VirtualShelf) GetGroup() *Group {
+	return slf._group
+}
 
 func (slf *VirtualShelf) init() {
 	slf._init.Do(func() {
@@ -59,90 +103,109 @@ func (slf *VirtualShelf) init() {
 }
 
 func (slf *VirtualShelf) SetWrite(f func() string) Shelf {
+	slf.init()
 	slf._write = f
 	return slf
 }
 
 func (slf *VirtualShelf) GetVirtual() *VirtualShelf {
-	slf.init()
 	return slf
 }
 
 func (slf *VirtualShelf) SetParent(parent Shelf) {
-	slf.init()
 	if slf.GetParent() != nil {
 		slf.GetParent().Del(slf)
 	}
-	parentVs := parent.GetVirtual()
-	parentVs._mapper[slf.GetID()] = len(parentVs._children)
-	parentVs._children = append(parentVs._children, slf)
-	slf._parent = parent
-	slf._level = parentVs._level + 1
-}
 
-func (slf *VirtualShelf) Move(parent Shelf) {
-	slf.init()
-	if slf._parent != nil {
-		slf._parent.Del(slf)
+	if parent != nil {
+		parentVs := parent.GetVirtual()
+		parentVs._mapper[slf.GetID()] = len(parentVs._children)
+		parentVs._children = append(parentVs._children, slf)
 	}
-	slf.SetParent(parent)
+
+	slf._parent = parent
 }
 
-func (slf *VirtualShelf) Add(shelf Shelf) Shelf {
-	slf.init()
-	shelf.Move(slf)
+func (slf *VirtualShelf) Bind(shelf ...Shelf) Shelf {
+	for _, s := range shelf {
+		// 如果要将该架子到壳子挂载到该架子里面
+		if slf._parent != nil {
+			if slf._parent.GetID() == s.GetID() {
+				if slf._parent.GetParent() != nil {
+					slf._parent.GetParent().Bind(slf)
+				} else {
+					if slf._parent.GetGroup() != nil {
+						slf._parent.GetGroup().Bind(slf)
+					} else {
+						slf._parent.Del(slf)
+						slf.Bind(s)
+					}
+				}
+				slf.Bind(s)
+				continue
+			}
+			if p, exist := s.Contains(slf); exist {
+				// 当壳子的壳子已经是最外层架子的时候，应该将两个架子当作新建的架子来重新挂载，否则升级架子后再成为壳子
+				p.Del(slf)
+				slf.Bind(s)
+				continue
+			}
+		}
+		if s.GetID() == slf._id {
+			continue
+		}
+		if s.GetParent() != nil {
+			s.GetParent().Del(s)
+		}
+		s.SetParent(slf)
+	}
 	return slf
 }
 
-func (slf *VirtualShelf) AddC(shelf Shelf) Shelf {
-	slf.init()
-	slf.Add(shelf)
+func (slf *VirtualShelf) BindC(shelf Shelf) Shelf {
+	slf.Bind(shelf)
 	return shelf
 }
 
 func (slf *VirtualShelf) Del(shelf Shelf) {
-	slf.init()
 	if index, exist := slf._mapper[shelf.GetID()]; exist {
 		delete(slf._mapper, shelf.GetID())
-		slf._children = append(slf._children[:index], slf._children[index + 1:]...)
+		if len(slf._children) == 1 {
+			slf._children = []Shelf{}
+		} else {
+			for _, s := range slf._children[index+1:] {
+				slf._mapper[s.GetID()] = slf._mapper[s.GetID()] - 1
+			}
+			slf._children = append(slf._children[:index], slf._children[index+1:]...)
+		}
+		shelf.SetParent(nil)
 	}
 }
 
-func (slf *VirtualShelf) Render() string {
-	slf.init()
+func (slf *VirtualShelf) Render(level int) string {
 	var result string
-	for i := 0; i < slf._level; i++ {
+	for i := 0; i < level; i++ {
 		result = result + "    "
 	}
 	result = result + slf._write() + "\n"
 	for _, child := range slf._children {
-		result += child.Render()
+		result += child.Render(level + 1)
 	}
 	return result
 }
 
-
-func (slf *VirtualShelf) SetLevel(level int) {
-	slf.init()
-	slf._level = level
-}
-
 func (slf *VirtualShelf) GetID() string {
-	slf.init()
 	return slf._id
 }
 
 func (slf *VirtualShelf) IsRoot() bool {
-	slf.init()
 	return slf._parent == nil
 }
 
 func (slf *VirtualShelf) GetParent() Shelf {
-	slf.init()
 	return slf._parent
 }
 
 func (slf *VirtualShelf) GetAllChildren() []Shelf {
-	slf.init()
 	return slf._children
 }
