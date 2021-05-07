@@ -53,21 +53,23 @@ type VirtualShelf struct {
 }
 
 func (slf *VirtualShelf) Move(shelf Shelf, index int) error {
-	if len(slf._children) <= 1 {
-		return nil
-	}
-	if index < 0 {
-		index = 0
-	}
-	if index > len(slf._children)-1 {
-		index = len(slf._children) - 1
-	}
+	// 检查子成员是否存在
 	if i, exist := slf._mapper[shelf.GetID()]; exist {
 		slf._children = append(slf._children[:i], slf._children[i+1:]...)
 	} else {
 		return errors.New("the shelf does not contain the child shelf")
 	}
 
+	// 索引范围控制
+	if index < 0 {
+		index = 0
+	}
+
+	if index > len(slf._children)-1 {
+		index = len(slf._children) - 1
+	}
+
+	// 移动
 	switch index {
 	case 0:
 		slf._children = append([]Shelf{shelf}, slf._children...)
@@ -79,6 +81,7 @@ func (slf *VirtualShelf) Move(shelf Shelf, index int) error {
 		slf._children = append(append(left, shelf), right...)
 	}
 
+	// 重建索引
 	for i, s := range slf._children {
 		slf._mapper[s.GetID()] = i
 	}
@@ -164,7 +167,11 @@ func (slf *VirtualShelf) SetParent(parent Shelf) {
 
 func (slf *VirtualShelf) Bind(shelf ...Shelf) Shelf {
 	for _, s := range shelf {
-		// 如果要将该架子到壳子挂载到该架子里面
+		// 跳过自己与自己绑定
+		if s.GetID() == slf._id {
+			continue
+		}
+
 		if slf._parent != nil {
 			if slf._parent.GetID() == s.GetID() {
 				if slf._parent.GetParent() != nil {
@@ -187,9 +194,7 @@ func (slf *VirtualShelf) Bind(shelf ...Shelf) Shelf {
 				continue
 			}
 		}
-		if s.GetID() == slf._id {
-			continue
-		}
+
 		if s.GetParent() != nil {
 			s.GetParent().Del(s)
 		}
