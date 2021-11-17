@@ -7,38 +7,38 @@ import (
 )
 
 type Shelf interface {
-	// 获取ID
+	// GetID 获取ID
 	GetID() string
-	// 获取虚拟架子
+	// GetVirtual 获取虚拟架子
 	GetVirtual() *VirtualShelf
-	// 获取壳子
+	// GetParent 获取壳子
 	GetParent() Shelf
-	// 获取所在的组
+	// GetGroup 获取所在的组
 	GetGroup() *Group
-	// 获取所有子架子
+	// GetAllChildren 获取所有子架子
 	GetAllChildren() []Shelf
-	// 是否是根架子
+	// IsRoot 是否是根架子
 	IsRoot() bool
-	// 设置输出内容
+	// SetWrite 设置输出内容
 	SetWrite(func() string) Shelf
-	// 检查子架子是否存在某架子并返回其壳子
+	// Contains 检查子架子是否存在某架子并返回其壳子
 	Contains(shelf Shelf) (Shelf, bool)
 
-	// 绑定某架子到该架子到末尾，并返回支持继续添加到相同架子的架子
+	// Bind 绑定某架子到该架子到末尾，并返回支持继续添加到相同架子的架子
 	Bind(shelf ...Shelf) Shelf
-	// 绑定架子到该架子末尾，并返回子架子
+	// BindC 绑定架子到该架子末尾，并返回子架子
 	BindC(shelf Shelf) Shelf
-	// 删除特定架子
+	// Del 删除特定架子
 	Del(shelf Shelf)
-	// 移动子架子位置
+	// Move 移动子架子位置
 	Move(shelf Shelf, index int) error
 
-	// 设置壳子
+	// SetParent 设置壳子
 	SetParent(shelf Shelf)
-	// 设置所在的组
+	// SetGroup 设置所在的组
 	SetGroup(group *Group)
 
-	// 渲染该架子
+	// Render 渲染该架子
 	Render(level int) string
 }
 
@@ -55,6 +55,10 @@ type VirtualShelf struct {
 func (slf *VirtualShelf) Move(shelf Shelf, index int) error {
 	// 检查子成员是否存在
 	if i, exist := slf._mapper[shelf.GetID()]; exist {
+		// 如果只有一个子成员
+		if len(slf._children) == 1 {
+			return nil
+		}
 		slf._children = append(slf._children[:i], slf._children[i+1:]...)
 	} else {
 		return errors.New("the shelf does not contain the child shelf")

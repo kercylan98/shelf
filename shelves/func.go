@@ -6,8 +6,8 @@ import (
 )
 
 type FuncParameter struct {
-	Name 	string
-	Type 	string
+	Name string
+	Type string
 }
 
 type FuncStart struct {
@@ -29,13 +29,13 @@ func NewFuncStart(name string, inputs []FuncParameter, outputs []FuncParameter) 
 			for _, parameter := range slf.Inputs {
 				input = fmt.Sprintf("%s%s %s, ", input, parameter.Name, parameter.Type)
 			}
-			input = input[:len(input) - 2]
+			input = input[:len(input)-2]
 		}
 		if slf.Outputs != nil && len(slf.Outputs) > 0 {
 			for _, parameter := range slf.Outputs {
 				output = fmt.Sprintf("%s%s %s, ", output, parameter.Name, parameter.Type)
 			}
-			output = output[:len(output) - 2]
+			output = output[:len(output)-2]
 		}
 		if slf.Outputs != nil && len(slf.Outputs) > 0 {
 			return fmt.Sprintf("func %s(%s) (%s) {", slf.Name, input, output)

@@ -1,10 +1,12 @@
 package shelves
 
-import "github.com/kercylan98/shelf/shelf"
+import (
+	"github.com/kercylan98/shelf"
+)
 
 type Line struct {
 	shelf.VirtualShelf
-	Count 	int
+	Count int
 }
 
 func NewLine(count int) shelf.Shelf {
@@ -14,7 +16,7 @@ func NewLine(count int) shelf.Shelf {
 			slf.Count = 1
 		}
 		var result string
-		for i := 0; i < slf.Count - 1; i++ {
+		for i := 0; i < slf.Count-1; i++ {
 			result += "\n"
 		}
 		return result

@@ -15,7 +15,6 @@ func NewImportStart() shelf.Shelf {
 	})
 }
 
-
 type ImportEnd struct {
 	shelf.VirtualShelf
 }
@@ -28,7 +27,7 @@ func NewImportEnd() shelf.Shelf {
 
 type Import struct {
 	shelf.VirtualShelf
-	Path 		string
+	Path string
 }
 
 func NewImport(path string) shelf.Shelf {

@@ -1,8 +1,8 @@
-# Shelf
+# 介绍
 
 > 通过搭积木的方式来生成代码、文本的工具（如流程图、积木转代码）
 
-### 案例
+# 案例
 
 ```
 type Package struct {
@@ -47,7 +47,7 @@ func Test(t *testing.T) {
 
 ```
 
-### 输出
+# 输出
 
 ```
 package shelf

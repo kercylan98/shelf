@@ -22,7 +22,7 @@ func (slf *Group) init() {
 	})
 }
 
-// 设置该组内特定架子的位置
+// Move 设置该组内特定架子的位置
 func (slf *Group) Move(shelf Shelf, index int) error {
 	if len(slf.shelves) <= 1 {
 		return nil
@@ -56,7 +56,7 @@ func (slf *Group) Move(shelf Shelf, index int) error {
 	return nil
 }
 
-// 从该组内删除某架子
+// Del 从该组内删除某架子
 func (slf *Group) Del(shelf Shelf) {
 	slf.init()
 	if index, exist := slf.mapper[shelf.GetID()]; exist {
@@ -75,7 +75,7 @@ func (slf *Group) Del(shelf Shelf) {
 	}
 }
 
-// 绑定架子到该组，如果架子已存在组则会将对应绑定转移到该组
+// Bind 绑定架子到该组，如果架子已存在组则会将对应绑定转移到该组
 func (slf *Group) Bind(shelf ...Shelf) *Group {
 	slf.init()
 	for _, s := range shelf {
@@ -118,7 +118,7 @@ func (slf *Group) Bind(shelf ...Shelf) *Group {
 	return slf
 }
 
-// 渲染该组
+// Render 渲染该组
 func (slf *Group) Render() string {
 	slf.init()
 	var result string
