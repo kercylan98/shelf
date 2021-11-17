@@ -2,8 +2,8 @@ package tests
 
 import (
 	"fmt"
-	"shelf/shelf"
-	"shelf/shelf/shelves"
+	"github.com/kercylan98/shelf"
+	"github.com/kercylan98/shelf/shelves"
 	"testing"
 )
 
