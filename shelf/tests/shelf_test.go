@@ -2,7 +2,7 @@ package tests
 
 import (
 	"fmt"
-	"shelf/shelf/shelves"
+	"github.com/kercylan98/shelf/shelves"
 	"testing"
 )
 
