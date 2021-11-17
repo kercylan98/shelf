@@ -1,6 +1,6 @@
 package shelves
 
-import "shelf/shelf"
+import "github.com/kercylan98/shelf/shelf"
 
 type Line struct {
 	shelf.VirtualShelf
