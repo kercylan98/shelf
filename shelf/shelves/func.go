@@ -2,7 +2,7 @@ package shelves
 
 import (
 	"fmt"
-	"shelf/shelf"
+	"github.com/kercylan98/shelf"
 )
 
 type FuncParameter struct {
