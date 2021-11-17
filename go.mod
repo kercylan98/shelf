@@ -1,4 +1,4 @@
-module shelf
+module github.com/kercylan98/shelf
 
 go 1.16
 
